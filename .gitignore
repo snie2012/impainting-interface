@@ -1,0 +1,7 @@
+*.pyc
+model/
+checkpoints/
+static/
+results/
+*.tar
+wideresnet.py

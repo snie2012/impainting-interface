@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <meta charset="utf-8">
+<head>
+  <style>
+  canvas,
+  svg {
+    position: absolute;
+  }
+  </style>
+  
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+</head>
+
+<body>
+  <canvas width="1024" height="1024"></canvas>
+  <svg width="1024" height="1024"></svg>
+  <button type="button" class="btn btn-outline-primary float-right" id="completion-B">Complete Face</button>
+
+<script>
+
+const canvas = document.querySelector("canvas"),
+    context = canvas.getContext("2d"),
+    width = canvas.width,
+    height = canvas.height;
+
+const pixel_size = 4, stride = height * pixel_size;
+var imageData = {};
+var fakeImage = context.createImageData(width, height);
+
+var brush = d3.brush()
+    .on("end", brushended);
+
+var svg = d3.select("svg");
+
+function brushended() {
+  if (d3.event.selection) {
+    imageData.mask = d3.event.selection;
+    d3.select('rect.selection').style('fill-opacity', 1);
+  }
+}
+
+
+$('#completion-B').on('click', function (e) {
+  const rawD = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+  // shape the data to shape (1, 3, 1024, 1024)
+  var rgb = [], _r = [], _g = [], _b = [];
+  // for (var r = 0; r < width; r++) {
+  //   var base_pos = r * stride, 
+  //       t_r = [], t_g = [], t_b = [];
+  //   for (var c = 0; c < stride; c += pixel_size) {
+  //     t_r.push(rawD[base_pos + c]);
+  //     t_g.push(rawD[base_pos + c + 1]);
+  //     t_b.push(rawD[base_pos + c + 2]);
+  //   }
+  //   _r.push(t_r);
+  //   _g.push(t_g);
+  //   _b.push(t_b);
+  // }
+
+  // rgb.push(_r);
+  // rgb.push(_g);
+  // rgb.push(_b);
+
+  // imageData.image = [];
+  // imageData.image[0] = rgb;
+  
+  for (var i = 0; i < rawD.length; i += pixel_size) {
+    rgb.push(rawD[i]);
+    rgb.push(rawD[i+1]);
+    rgb.push(rawD[i+2]);
+  }
+  imageData.image = rgb;
+
+  $.ajax({
+      url: '/api/input',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify(imageData),
+      success: function(response) {
+          console.log("Data received");
+          let f_d = JSON.parse(response)['fake'];
+          // dimension of data: (1024, 1024, 3)
+          var cur_stride, cur_pos;
+          for (var i = 0; i < width; i++) {
+            cur_stride = i * stride;
+            for (var j = 0; j < height; j++) {
+              cur_pos = cur_stride + j * pixel_size;
+              fakeImage.data[cur_pos] = f_d[i][j][0];
+              fakeImage.data[cur_pos + 1] = f_d[i][j][1];
+              fakeImage.data[cur_pos + 2] = f_d[i][j][2];
+              fakeImage.data[cur_pos + 3] = 255;
+            }
+          }
+
+          context.putImageData(fakeImage, 0, 0);
+      }
+  });
+})
+
+
+function loaded() {
+  context.drawImage(this, 0, 0);
+
+  svg.append("g")
+      .attr("class", "brush")
+      .call(brush)
+      .call(brush.move, [[307, 167], [611, 539]]);
+}
+
+var image = new Image;
+image.src = "static/testA/000825.png";
+image.onload = loaded;
+
+</script>
+
+</body>
+</html>
