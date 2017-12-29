@@ -16,19 +16,6 @@ opt.nThreads = 1   # test code only supports nThreads = 1
 opt.serial_batches = True  # no shuffle
 opt.no_flip = True  # no flip
 
-# opt.name = 'celeba1024_progressive_v2'
-# opt.model = 'pix2pix'
-# opt.which_model_netG = 'progressive'
-# opt.which_direction = 'AtoB'
-# opt.class_index_B = 52
-# opt.batchSize = 1
-# opt.norm = 'batch'
-# opt.conditionalCAM = True
-# opt.which_epoch = 'latest'
-# opt.which_resl = 8
-# opt.end_resl = 8
-# opt.gpu_ids = -1
-
 transform = get_transform(opt)
 model = create_model(opt)
 
