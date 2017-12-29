@@ -81,7 +81,8 @@ function updateMask(x, y, w, h) {
 
 
 $('#completion').on('click', function (e) {
-  const raw = originalImageData.data;
+  // const raw = originalImageData.data;
+  const raw = context.getImageData(0, 0, canvas.width, canvas.height).data;
 
   // shape the data to shape (1, 3, 1024, 1024)
   var rgb = [];  
