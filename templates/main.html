@@ -29,10 +29,24 @@ const canvas = document.querySelector("canvas"),
     height = canvas.height
     square_len = 100;
 
-const pixel_size = 4, stride = height * pixel_size;
+const channels = 3, pixel_size = 4, stride = height * pixel_size;
+var originalImageData;
 var realImage, 
-    mask = context.createImageData(width, height),
+    mask,
     fakeImage = context.createImageData(width, height);
+
+context.fillStyle = 'gray';
+
+function initMask() {
+  mask = [];
+  for (var i = 0; i < height; i++) {
+    var t = [];
+    for (var j = 0; j < width; j++) {
+      t.push(0);
+    }
+    mask.push(t);
+  }
+}
 
 // canvas event listener
 // reference: https://stackoverflow.com/questions/2368784/draw-on-html5-canvas-using-a-mouse
@@ -43,6 +57,7 @@ $("canvas")
       const x = e.clientX - canvas.offsetLeft - square_len / 2;
       const y = e.clientY - canvas.offsetTop - square_len / 2;
       context.fillRect(x, y, square_len, square_len);
+      updateMask(x, y, square_len, square_len);
     }
   })
   .on("mousedown", function(e) {
@@ -55,36 +70,25 @@ $("canvas")
     
   });
 
+function updateMask(x, y, w, h) {
+  // update the mask when mouseover
+  for (var i = x; i < x + h; i++) {
+    for (var j = y; j < y + w; j++) {
+      if (i > -1 && i < width && j > -1 && j < height && mask[i][j] != 1) mask[i][j] = 1
+    }
+  }
+}
+
 
 $('#completion').on('click', function (e) {
-  const rawD = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  const raw = originalImageData.data;
 
   // shape the data to shape (1, 3, 1024, 1024)
-  var rgb = [], _r = [], _g = [], _b = [];
-  // for (var r = 0; r < width; r++) {
-  //   var base_pos = r * stride, 
-  //       t_r = [], t_g = [], t_b = [];
-  //   for (var c = 0; c < stride; c += pixel_size) {
-  //     t_r.push(rawD[base_pos + c]);
-  //     t_g.push(rawD[base_pos + c + 1]);
-  //     t_b.push(rawD[base_pos + c + 2]);
-  //   }
-  //   _r.push(t_r);
-  //   _g.push(t_g);
-  //   _b.push(t_b);
-  // }
-
-  // rgb.push(_r);
-  // rgb.push(_g);
-  // rgb.push(_b);
-
-  // imageData.image = [];
-  // imageData.image[0] = rgb;
-  
-  for (var i = 0; i < rawD.length; i += pixel_size) {
-    rgb.push(rawD[i]);
-    rgb.push(rawD[i+1]);
-    rgb.push(rawD[i+2]);
+  var rgb = [];  
+  for (var i = 0; i < raw.length; i += pixel_size) {
+    rgb.push(raw[i]);
+    rgb.push(raw[i+1]);
+    rgb.push(raw[i+2]);
   }
   realImage = rgb;
 
@@ -112,7 +116,6 @@ $('#completion').on('click', function (e) {
           context.putImageData(fakeImage, 0, 0);
 
           // clear the mask
-          
       }
   });
 })
@@ -120,6 +123,8 @@ $('#completion').on('click', function (e) {
 
 function loaded() {
   context.drawImage(this, 0, 0);
+  originalImageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  initMask();
 }
 
 var image = new Image;
