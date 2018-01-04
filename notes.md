@@ -18,5 +18,5 @@ major tasks:
 * Design the layout of the homepage
 
 ### Running command
-python server.py --dataroot /home/snie/Desktop/impaiting_interface/static/ --name celeba1024_progressive_v2 --model pix2pix --which_model_netG progressive --which_direction AtoB --how_many 40 --class_index_B 52 --batchSize 1 --norm batch --conditionalCAM --which_epoch latest --which_resl 8 --end_resl 8 --gpu_ids 0
+python server.py --dataroot /media/snie/DATA/impaiting_interface/static/ --name celeba1024_progressive_v2 --model pix2pix --which_model_netG progressive --which_direction AtoB --how_many 40 --class_index_B 52 --batchSize 1 --norm batch --conditionalCAM --which_epoch latest --which_resl 8 --end_resl 8 --gpu_ids 0
 
